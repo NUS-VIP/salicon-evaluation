@@ -6,5 +6,11 @@ setup(
     name='pycocoevalsal',
     packages=['pycocoevalsal'],
     package_dir = {'pycocoevalsal': 'pycocoevalsal'},
-    version='0.1'
+    version='0.1',
+    install_requires=['coco'],
+    dependency_links=['https://github.com/pdollar/coco/tarball/master#egg=coco']    
+    
 )
+
+
+
