@@ -3,7 +3,7 @@ evaluation API for salicon : a counterpart of saliency prediction as https://git
 
 # SALICON Annotation file format:
 
-## 1. The basic ovrall format below is retained, while the annotation part is replaced with saliency annoations:
+## 1. Basic structure (same as coco other annotations):
 ```
 {
 "info" : info,
