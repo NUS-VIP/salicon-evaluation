@@ -2,32 +2,13 @@ __author__ = 'shane-huang'
 __version__ = '1.0'
 # Interface for accessing the SALICON dataset - saliency annotations for Microsoft COCO dataset.
 
-# An alternative to using the API is to load the annotations directly
-# into Python dictionary
-# Using the API provides additional utility functions. Note that this API
-# supports both *instance* and *caption* annotations. In the case of
-# captions not all functions are defined (e.g. categories are undefined).
-
-# The following API functions are defined:
-#  COCO       - COCO api class that loads COCO annotation file and prepare data structures.
-#  decodeMask - Decode binary mask M encoded via run-length encoding.
-#  encodeMask - Encode binary mask M using run-length encoding.
-#  getAnnIds  - Get ann ids that satisfy given filter conditions.
-#  getCatIds  - Get cat ids that satisfy given filter conditions.
-#  getImgIds  - Get img ids that satisfy given filter conditions.
-#  loadAnns   - Load anns with the specified ids.
-#  loadCats   - Load cats with the specified ids.
-#  loadImgs   - Load imgs with the specified ids.
-#  segToMask  - Convert polygon segmentation to binary mask.
-#  showAnns   - Display the specified annotations.
-#  loadRes    - Load result file and create result api object.
-# Throughout the API "ann"=annotation, "cat"=category, and "img"=image.
 
 import json
 import sys
 sys.path.append("../")
 from pycocotools.coco import COCO
-
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 
 class SALICON (COCO):
@@ -112,21 +93,62 @@ class SALICON (COCO):
         """
         if len(anns) == 0:
             return 0
-        
-        if self.dataset['type'] == 'fixations':
-            pass
-        
 
+        assert(len(set([ann['image_id'] for ann in anns])) == 1)
+        image_id = list(set([ann['image_id'] for ann in anns]))[0]
+        imginfo = self.imgs[image_id]
+        #if datatype is fixations, build saliency map 
+        sal_map = np.zeros((imginfo['width'],imginfo['height']))
+        if self.dataset['type'] == 'fixations':
+            #TODO# depend on self.buildSaliencyMap
+            sal_map = self.buildSalMap(anns)
+        else if self.dataset['type'] == 'saliency_map':
+            assert(len(anns) == 1)
+            sal_map = anns[0]['saliency_map']
+        # TODO # show saliency map now
+        # to change to heatmap
+        plt.imshow(sal_map, cmap = cm.Greys_r)        
+
+    def buildSalMap(self,anns,doBlur=True):
+        """
+        TODO: Build Saliency Map based on fixation annotations
+        refer to format spec to see the format of fixations
+        """
+        if len(anns) == 0:
+            return 0
+
+        #build saliency map based on annotations
+        #check whether all annotations are for the same image
+        assert(len(set([ann['image_id'] for ann in anns])) == 1)
+        image_id = list(set([ann['image_id'] for ann in anns]))[0]
+        
+        # TODO # fspecial implementation in python 
+        # gauss = fspecial('gaussian', round([pDB.display.ppd pDB.display.ppd] * 5), pDB.display.ppd);
+
+        fixations = [ann['fixations'] for ann in anns] # fixations from several workers
+        merged_fixations = [item for sublist in fixations for item in sublist] #merge
+        #create saliency map
+        imginfo = self.imgs[image_id]
+        sal_map = np.zeros((imginfo['width'],imginfo['height']))
+        [sal_map(x,y) = 1 for x,y in set(merged_fixations)]
+        if doBlur:
+            # TODO # imfileter and normalise in python
+            #sal_map = imfilter(map, gauss, 0);
+            #sal_map = normalise(map);
+            pass
+        return sal_map
+    
     def loadRes(self, resFile):
         """
         Load result file and return a result api object.
         :param   resFile (str)     : file name of result file
         :return: res (obj)         : result api object
+        result annotation has different format from the ground truth annotation (fixations vs. saliency map)
         """
         res = SALICON()
         res.dataset['images'] = [img for img in self.dataset['images']]
         res.dataset['info'] = copy.deepcopy(self.dataset['info'])
-        res.dataset['type'] = copy.deepcopy(self.dataset['type'])
+        res.dataset['type'] = 'saliency_map'
         res.dataset['licenses'] = copy.deepcopy(self.dataset['licenses'])
 
         print 'Loading and preparing results...     '
@@ -136,32 +158,22 @@ class SALICON (COCO):
         annsImgIds = [ann['image_id'] for ann in anns]
         assert set(annsImgIds) == (set(annsImgIds) & set(self.getImgIds())), \
                'Results do not correspond to current coco set'
-        if 'caption' in anns[0]:
+        if 'saliency_map' in anns[0]:
+            #only keep the intersection of result and original image set
             imgIds = set([img['id'] for img in res.dataset['images']]) & set([ann['image_id'] for ann in anns])
             res.dataset['images'] = [img for img in res.dataset['images'] if img['id'] in imgIds]
             for id, ann in enumerate(anns):
                 ann['id'] = id
-        elif 'bbox' in anns[0] and not anns[0]['bbox'] == []:
-            res.dataset['categories'] = copy.deepcopy(self.dataset['categories'])
-            for id, ann in enumerate(anns):
-                bb = ann['bbox']
-                x1, x2, y1, y2 = [bb[0], bb[0]+bb[2], bb[1], bb[1]+bb[3]]
-                ann['segmentation'] = [[x1, y1, x1, y2, x2, y2, x2, y1]]
-                ann['area'] = bb[2]*bb[3]
-                ann['id'] = id
-                ann['iscrowd'] = 0
-        elif 'segmentation' in anns[0]:
-            res.dataset['categories'] = copy.deepcopy(self.dataset['categories'])
-            for id, ann in enumerate(anns):
-                ann['area']=sum(ann['segmentation']['counts'][2:-1:2])
-                ann['bbox'] = []
-                ann['id'] = id
-                ann['iscrowd'] = 0
+            ### TODO ###
+            # make sure whether needs to copy other things into Result object
+            
         print 'DONE (t=%0.2fs)'%((datetime.datetime.utcnow() - time_t).total_seconds())
 
         res.dataset['annotations'] = anns
         res.createIndex()
         return res
+
+
 
 
 if __name__ == "__main__":
