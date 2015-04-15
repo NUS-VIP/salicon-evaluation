@@ -1,105 +1,72 @@
 #!/usr/bin/env python
 # 
-# File Name : rouge.py
+# File Name : nss.py
 #
-# Description : Computes ROUGE-L metric as described by Lin and Hovey (2004)
-#
-# Creation Date : 2015-01-07 06:03
-# Author : Ramakrishna Vedantam <vrama91@vt.edu>
+# Description : Computes NSS metric #
+
+# Author : Ming Jiang 
 
 import numpy as np
-import pdb
+import scipy.ndimage
 
-def my_lcs(string, sub):
-    """
-    Calculates longest common subsequence for a pair of tokenized strings
-    :param string : list of str : tokens from a string split using whitespace
-    :param sub : list of str : shorter string, also split using whitespace
-    :returns: length (list of int): length of the longest common subsequence between the two strings
 
-    Note: my_lcs only gives length of the longest common subsequence, not the actual LCS
-    """
-    if(len(string)< len(sub)):
-        sub, string = string, sub
-
-    lengths = [[0 for i in range(0,len(sub)+1)] for j in range(0,len(string)+1)]
-
-    for j in range(1,len(sub)+1):
-        for i in range(1,len(string)+1):
-            if(string[i-1] == sub[j-1]):
-                lengths[i][j] = lengths[i-1][j-1] + 1
-            else:
-                lengths[i][j] = max(lengths[i-1][j] , lengths[i][j-1])
-
-    return lengths[len(string)][len(sub)]
-
-class Rouge():
+class NSS():
     '''
-    Class for computing ROUGE-L score for a set of candidate sentences for the MS COCO test set
+    Class for computing NSS score for a set of candidate sentences for the MS COCO test set
 
     '''
-    def __init__(self):
-        # vrama91: updated the value below based on discussion with Hovey
-        self.beta = 1.2
+    def __init__(self,cocoRes):
+        self.cocoRes = cocoRes
+        self.imgs = self.cocoRes.imgs
 
-    def calc_score(self, candidate, refs):
+
+    def calc_score(self, gtsAnn, resAnn):
         """
-        Compute ROUGE-L score given one candidate and references for an image
-        :param candidate: str : candidate sentence to be evaluated
-        :param refs: list of str : COCO reference sentences for the particular image to be evaluated
-        :returns score: int (ROUGE-L score for the candidate evaluated against references)
+        Computer NSS score. A simple implementation
+        :param sal_map : ndarray: predicted saliency map 
+        :param points : list of points: fixations
+        :return score: int : NSS score
         """
-        assert(len(candidate)==1)	
-        assert(len(refs)>0)         
-        prec = []
-        rec = []
-
-        # split into tokens
-        token_c = candidate[0].split(" ")
-    	
-        for reference in refs:
-            # split into tokens
-            token_r = reference.split(" ")
-            # compute the longest common subsequence
-            lcs = my_lcs(token_r, token_c)
-            prec.append(lcs/float(len(token_c)))
-            rec.append(lcs/float(len(token_r)))
-
-        prec_max = max(prec)
-        rec_max = max(rec)
-
-        if(prec_max!=0 and rec_max !=0):
-            score = ((1 + self.beta**2)*prec_max*rec_max)/float(rec_max + self.beta**2*prec_max)
-        else:
-            score = 0.0
-        return score
+        #TODO# why is size needed here? can we omit
+        image_id = resAnn[0]['image_id']
+        #get ground truth fixations and result saliency map
+        fixations = [ ann['fixations'] for ann in gtsAnn ] # fixations list
+        salmap = reAnn[0]['saliency_map']
+        #get size of the original image
+        size = (self.imgs[image_id]['width'],self.imgs[image_gid]['height'])
+        map_size = np.shape(salmap)
+        sal_map = scipy.ndimage.zoom(salmap, (float(size[0])/map_size[0], float(size[1])/map_size[1]), order=3)
+        sal_map = (salmap - np.mean(salmap))/np.std(salmap)
+        return np.mean(sal_map[points])
 
     def compute_score(self, gts, res):
         """
-        Computes Rouge-L score given a set of reference and candidate sentences for the dataset
-        Invoked by evaluate_captions.py 
-        :param hypo_for_image: dict : candidate / test sentences with "image name" key and "tokenized sentences" as values 
-        :param ref_for_image: dict : reference MS-COCO sentences with "image name" key and "tokenized sentences" as values
-        :returns: average_score: float (mean ROUGE-L score computed by averaging scores for all the images)
+        Computes NSS score for a given set of predictions and fixations
+        :param nSalmaps : dict : salmap predictions with "image name" key and ndarray as values 
+        :param nPoints : dict : fixation points with "image name" key and list of points as values
+        :returns: average_score: float (mean NSS score computed by averaging scores for all the images)
         """
         assert(gts.keys() == res.keys())
-        imgIds = gts.keys()
+        imgIds = res.keys()
 
         score = []
         for id in imgIds:
-            hypo = res[id]
-            ref  = gts[id]
+            salmap = res[id]
+            fixations  = gts[id]
 
-            score.append(self.calc_score(hypo, ref))
-
-            # Sanity check.
-            assert(type(hypo) is list)
-            assert(len(hypo) == 1)
-            assert(type(ref) is list)
-            assert(len(ref) > 0)
+            score.append(self.calc_score(salmap, fixations))
 
         average_score = np.mean(np.array(score))
         return average_score, np.array(score)
 
     def method(self):
-        return "Rouge"
+        return "NSS"
+
+   
+
+if __name__=="__main__":
+  
+    nss = NSS()
+    sal_map = np.asarray([[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 1, 1]])
+    fixations = [[0, -1, -2],[0, -1, -2]]
+    print nss.calc_score(sal_map, fixations)

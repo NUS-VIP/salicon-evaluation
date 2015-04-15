@@ -1,10 +1,11 @@
-__author__ = 'tylin'
+__author__ = 'shane-huang'
+__version__ = '1.0'
+
 from nss.nss import NSS
-from tokenizer.ptbtokenizer import PTBTokenizer
-from bleu.bleu import Bleu
-from meteor.meteor import Meteor
-from rouge.rouge import Rouge
-from cider.cider import Cider
+from kl.kl import KL
+from sauc.sauc import SAUC
+from auc.auc import AUC
+from cc.cc import CC
 
 class COCOEvalSal:
     def __init__(self, coco, cocoRes):
@@ -24,23 +25,18 @@ class COCOEvalSal:
             gts[imgId] = self.coco.imgToAnns[imgId]
             res[imgId] = self.cocoRes.imgToAnns[imgId]
 
-        # =================================================
-        # Set up scorers
-        # =================================================
-        print 'tokenization...'
-        tokenizer = PTBTokenizer()
-        gts  = tokenizer.tokenize(gts)
-        res = tokenizer.tokenize(res)
 
         # =================================================
         # Set up scorers
         # =================================================
         print 'setting up scorers...'
+        ## TODO ## set up the scorers,
+        ## and add any initialization parameters here
         scorers = [
-            (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
-            (Meteor(),"METEOR"),
-            (Rouge(), "ROUGE_L"),
-            (Cider(), "CIDEr")
+            (NSS(self.cocoRes), "NSS"),
+            #(Meteor(),"METEOR"),
+            #(Rouge(), "ROUGE_L"),
+            #(Cider(), "CIDEr")
         ]
 
         # =================================================
