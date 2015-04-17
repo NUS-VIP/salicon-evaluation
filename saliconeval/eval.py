@@ -2,19 +2,19 @@ __author__ = 'shane-huang'
 __version__ = '1.0'
 
 from nss.nss import NSS
-from kl.kl import KL
-from sauc.sauc import SAUC
-from auc.auc import AUC
-from cc.cc import CC
+#from kl.kl import KL
+#from sauc.sauc import SAUC
+#from auc.auc import AUC
+#from cc.cc import CC
 
-class COCOEvalSal:
-    def __init__(self, coco, cocoRes):
+class SALICONEval:
+    def __init__(self, salicon, saliconRes):
         self.evalImgs = []
         self.eval = {}
         self.imgToEval = {}
-        self.coco = coco
-        self.cocoRes = cocoRes
-        self.params = {'image_id': coco.getImgIds()}
+        self.salicon = salicon
+        self.saliconRes = saliconRes
+        self.params = {'image_id': salicon.getImgIds()}
 
     def evaluate(self):
         imgIds = self.params['image_id']
@@ -22,8 +22,8 @@ class COCOEvalSal:
         gts = {}
         res = {}
         for imgId in imgIds:
-            gts[imgId] = self.coco.imgToAnns[imgId]
-            res[imgId] = self.cocoRes.imgToAnns[imgId]
+            gts[imgId] = self.salicon.imgToAnns[imgId]
+            res[imgId] = self.saliconRes.imgToAnns[imgId]
 
 
         # =================================================
@@ -33,7 +33,7 @@ class COCOEvalSal:
         ## TODO ## set up the scorers,
         ## and add any initialization parameters here
         scorers = [
-            (NSS(self.cocoRes), "NSS"),
+            (NSS(self.saliconRes), "NSS"),
             #(Meteor(),"METEOR"),
             #(Rouge(), "ROUGE_L"),
             #(Cider(), "CIDEr")

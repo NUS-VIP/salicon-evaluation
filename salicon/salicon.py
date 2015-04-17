@@ -2,14 +2,13 @@ __author__ = 'shane-huang'
 __version__ = '1.0'
 # Interface for accessing the SALICON dataset - saliency annotations for Microsoft COCO dataset.
 
-
+import copy
 import json
-import sys
-sys.path.append("../")
 from pycocotools.coco import COCO
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-
+import datetime
+import numpy as np
 
 class SALICON (COCO):
     def __init__(self, annotation_file=None):
@@ -57,10 +56,10 @@ class SALICON (COCO):
         else:
             anns = sum([self.imgToAnns[imgId] for imgId in imgIds if imgId in self.imgToAnns],[])
         
-        if self.dataset['type'] == 'fixations':
+        if self.dataset['type'] == 'fixations' or self.dataset['type'] == 'saliency_map':
             ids = [ann['id'] for ann in anns]
         else:
-            print "Unkonwn dataset type"
+            print "Unknown dataset type"
             ids = []
         return ids
 
@@ -98,18 +97,18 @@ class SALICON (COCO):
         image_id = list(set([ann['image_id'] for ann in anns]))[0]
         imginfo = self.imgs[image_id]
         #if datatype is fixations, build saliency map 
-        sal_map = np.zeros((imginfo['width'],imginfo['height']))
+        sal_map = np.zeros((imginfo['height'],imginfo['width']))
         if self.dataset['type'] == 'fixations':
             #TODO# depend on self.buildSaliencyMap
-            sal_map = self.buildSalMap(anns)
-        else if self.dataset['type'] == 'saliency_map':
+            sal_map = self.buildFixMap(anns)
+        elif self.dataset['type'] == 'saliency_map':
             assert(len(anns) == 1)
             sal_map = anns[0]['saliency_map']
         # TODO # show saliency map now
         # to change to heatmap
-        plt.imshow(sal_map, cmap = cm.Greys_r)        
+        plt.imshow(sal_map, cmap = cm.Greys_r,vmin=0,vmax=1)        
 
-    def buildSalMap(self,anns,doBlur=True):
+    def buildFixMap(self,anns,doBlur=True):
         """
         TODO: Build Saliency Map based on fixation annotations
         refer to format spec to see the format of fixations
@@ -124,17 +123,18 @@ class SALICON (COCO):
         
         # TODO # fspecial implementation in python 
         # gauss = fspecial('gaussian', round([pDB.display.ppd pDB.display.ppd] * 5), pDB.display.ppd);
-
         fixations = [ann['fixations'] for ann in anns] # fixations from several workers
         merged_fixations = [item for sublist in fixations for item in sublist] #merge
         #create saliency map
         imginfo = self.imgs[image_id]
-        sal_map = np.zeros((imginfo['width'],imginfo['height']))
-        [sal_map(x,y) = 1 for x,y in set(merged_fixations)]
+        sal_map = np.zeros((imginfo['height'],imginfo['width']))
+        
+        for x,y in merged_fixations:
+            sal_map[y][x] = 1
         if doBlur:
             # TODO # imfileter and normalise in python
-            #sal_map = imfilter(map, gauss, 0);
-            #sal_map = normalise(map);
+            #sal_map = imfilter(sal_map, gauss, 0);
+            #sal_map = normalise(sal_map);
             pass
         return sal_map
     
@@ -180,4 +180,5 @@ if __name__ == "__main__":
     s = SALICON('../annotations/fixations_val2014_examples.json')
     s.info()
     print s.getImgIds()
-    print s.getAnnIds(imgIds=102625)
+    print s.imgs[102625]
+    #print s.getAnnIds(imigIds=102625)
