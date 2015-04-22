@@ -2,10 +2,10 @@ __author__ = 'shane-huang'
 __version__ = '1.0'
 
 from nss.nss import NSS
-#from kl.kl import KL
-#from sauc.sauc import SAUC
-#from auc.auc import AUC
-#from cc.cc import CC
+from kl.kl import KL
+from sauc.sauc import SAUC
+from auc.auc import AUC
+from cc.cc import CC
 
 class SALICONEval:
     def __init__(self, salicon, saliconRes):
@@ -34,6 +34,10 @@ class SALICONEval:
         ## and add any initialization parameters here
         scorers = [
             (NSS(self.saliconRes), "NSS"),
+            (SAUC(self.saliconRes),"SAUC"),
+            (CC(self.saliconRes),"CC"),
+            (AUC(self.saliconRes),"AUC"),
+            (KL(self.saliconRes),"KL")
             #(Meteor(),"METEOR"),
             #(Rouge(), "ROUGE_L"),
             #(Cider(), "CIDEr")
