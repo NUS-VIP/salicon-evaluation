@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[6]:
+# In[13]:
 
 #get_ipython().magic(u'matplotlib inline')
 import numpy as np
@@ -15,9 +15,10 @@ import skimage
 import datetime
 import json
 import base64
+import cStringIO
 
 
-# In[29]:
+# In[16]:
 
 class ImageTools:
     
@@ -70,16 +71,18 @@ class ImageTools:
     
     
     def showPrediction(self,image_id):
-        prediction = self.result[image_id]
-        print prediction.shape,prediction.dtype
-        plt.imshow(prediction,cm.Greys_r,vmin = 0, vmax = 1)
+        salmapData = base64.b64decode(self.result[image_id]['saliency_map'])
+        salmapFilelike = cStringIO.StringIO(salmapData)
+        img = skimage.img_as_float(io.imread(salmapFilelike))
+        print img.shape,img.dtype
+        plt.imshow(img,cm.Greys_r,vmin = 0, vmax = 1)
         pass
 
 
-# In[31]:
+# In[17]:
 
 if __name__ == "__main__":
-    sp = ImageTools('./sal/bms','train10k_result.json')
+    sp = ImageTools('./bms','train-examples_result.json')
     sp.convert()
     sp.dumpRslt()
     #sp.showPrediction(226936)
