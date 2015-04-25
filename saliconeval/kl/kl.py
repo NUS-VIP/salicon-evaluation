@@ -15,9 +15,9 @@ class KL():
     Class for computing NSS score for a set of candidate sentences for the MS COCO test set
 
     '''
-    def __init__(self,cocoRes):
-        self.cocoRes = cocoRes
-        self.imgs = self.cocoRes.imgs
+    def __init__(self,saliconRes):
+        self.saliconRes = saliconRes
+        self.imgs = self.saliconRes.imgs
 
 
     def calc_score(self, gtsAnn, resAnn):

@@ -15,9 +15,9 @@ class CC():
     Class for computing NSS score for a set of candidate sentences for the MS COCO test set
 
     '''
-    def __init__(self,cocoRes):
-        self.cocoRes = cocoRes
-        self.imgs = self.cocoRes.imgs
+    def __init__(self,saliconRes):
+        self.saliconRes = saliconRes
+        self.imgs = self.saliconRes.imgs
 
 
     def calc_score(self, gtsAnn, resAnn):
@@ -34,7 +34,7 @@ class CC():
         salmap = self.saliconRes.decodeImage(resAnn[0]['saliency_map'])
 
         #get size of the original image
-        hight,width = (self.imgs[image_id]['height'],self.imgs[image_id]['width'])
+        height,width = (self.imgs[image_id]['height'],self.imgs[image_id]['width'])
         mapheight,mapwidth = np.shape(salmap)
         salmap = scipy.ndimage.zoom(salmap, float(height)/mapheight, float(width)/mapwidth, order=3)
         salmap = (salmap - np.mean(salmap))/np.std(salmap)
