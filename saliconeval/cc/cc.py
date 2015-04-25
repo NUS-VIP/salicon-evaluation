@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-# 
+#
 # File Name : nss.py
 #
 # Description : Computes NSS metric #
 
-# Author : Ming Jiang 
+# Author : Ming Jiang
 
 import numpy as np
 import scipy.ndimage
@@ -27,14 +27,34 @@ class CC():
         :param resAnn : list only contains one element: the result annotation - predicted saliency map
         :return score: int : score
         """
-        return 0.0
+
+        image_id = resAnn[0]['image_id']
+        fixations = [ ann['fixations'] for ann in gtsAnn]
+        merged_fixations = [item for sublist in fixations for item in sublist]
+        salmap = self.saliconRes.decodeImage(resAnn[0]['saliency_map'])
+
+        #get size of the original image
+        hight,width = (self.imgs[image_id]['height'],self.imgs[image_id]['width'])
+        mapheight,mapwidth = np.shape(salmap)
+        salmap = scipy.ndimage.zoom(salmap, float(height)/mapheight, float(width)/mapwidth, order=3)
+        salmap = (salmap - np.mean(salmap))/np.std(salmap)
+
+        # TODO remove the hard code here and read the fixation map from JSON
+        sigma = 19
+        fixationmap = np.zeros((height,width))
+        for x,y in merged_fixations:
+            fixationmap[y][x] = 1
+        fixationmap = np.ndimage.filter.gaussian_filter(fixationmap, sigma)
+        fixationmap = (fixationmap - np.min(fixationmap))/np.std(fixationmap)
+
+        return np.corrcoef(salmap.reshape(-1), fixationmap.reshape(-1))[0][1]
 
     def compute_score(self, gts, res):
         """
         Computes CC score for a given set of predictions and fixations
         :param gts : dict : fixation points with "image name" key and list of points as values
-        :param res : dict : salmap predictions with "image name" key and ndarray as values 
-        :returns: average_score: float (mean NSS score computed by averaging scores for all the images)
+        :param res : dict : salmap predictions with "image name" key and ndarray as values
+        :returns: average_score: float (mean CC score computed by averaging scores for all the images)
         """
         assert(gts.keys() == res.keys())
         imgIds = res.keys()
@@ -49,8 +69,8 @@ class CC():
     def method(self):
         return "CC"
 
-   
 
-if __name__=="__main__": 
+
+if __name__=="__main__":
     nss = CC()
     #more tests here
