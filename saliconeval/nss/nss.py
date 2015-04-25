@@ -15,9 +15,9 @@ class NSS():
     Class for computing NSS score for a set of candidate sentences for the MS COCO test set
 
     '''
-    def __init__(self,cocoRes):
-        self.cocoRes = cocoRes
-        self.imgs = self.cocoRes.imgs
+    def __init__(self,saliconRes):
+        self.saliconRes = saliconRes
+        self.imgs = self.saliconRes.imgs
 
 
     def calc_score(self, gtsAnn, resAnn):
@@ -32,13 +32,13 @@ class NSS():
         #get ground truth fixations and result saliency map
         fixations = [ ann['fixations'] for ann in gtsAnn ] # fixations list
         merged_fixations = [item for sublist in fixations for item in sublist]
-        salmap = resAnn[0]['saliency_map']
+        salmap = self.saliconRes.decodeImage(resAnn[0]['saliency_map'])
         #get size of the original image
         height,width = (self.imgs[image_id]['height'],self.imgs[image_id]['width'])
         mapheight,mapwidth = np.shape(salmap)
-        sal_map = scipy.ndimage.zoom(salmap, (float(width)/mapwidth, float(height)/mapheight), order=3)
+        sal_map = scipy.ndimage.zoom(salmap, (float(height)/mapheight, float(width)/mapwidth), order=3)
         sal_map = (salmap - np.mean(salmap))/np.std(salmap)
-        return np.mean([ sal_map[y][x] for x,y in merged_fixations ])
+        return np.mean([ sal_map[y-1][x-1] for y,x in merged_fixations ])
 
     def compute_score(self, gts, res):
         """
@@ -50,7 +50,7 @@ class NSS():
         assert(gts.keys() == res.keys())
         imgIds = res.keys()
         score = []
-        for id in imgIds:
+        for id in imgIds :
             salmap = res[id]
             fixations  = gts[id]
             score.append(self.calc_score(fixations,salmap))
@@ -62,9 +62,5 @@ class NSS():
 
    
 
-if __name__=="__main__":
-  
+if __name__=="__main__": 
     nss = NSS()
-    sal_map = np.asarray([[0, 0, 0, 0], [0, 0, 0, 0], [1, 1, 1, 1], [1, 1, 1, 1]])
-    fixations = [[0, -1, -2],[0, -1, -2]]
-    print nss.calc_score(sal_map, fixations)
