@@ -14,6 +14,8 @@ from skimage import io
 import skimage
 import datetime
 import json
+import base64
+
 
 # In[29]:
 
@@ -35,6 +37,12 @@ class ImageTools:
         #print imgFile
         #print out.shape
         
+    def toBase64(self,imgFile):
+        encoded_string = ''
+        with open(imgFile, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read())
+        return encoded_string 
+
     def toRef(self,imgFile):
         return imgFile.split('/')[-1]
          
@@ -48,7 +56,7 @@ class ImageTools:
         for imgfname in imgfiles:
             imgFile = path.join(self.resImageDir,imgfname)
             id = self.getImgIdFromFileName(imgFile)
-            self.result[id] = {u'image_id':id, 'saliency_map': self.toRef(imgFile) }
+            self.result[id] = {u'image_id':id, 'saliency_map': self.toBase64(imgFile) }
         print len(self.result.keys()),'images converted','in %0.2fs'%((datetime.datetime.utcnow() - time_t).total_seconds())
         
       
@@ -71,7 +79,7 @@ class ImageTools:
 # In[31]:
 
 if __name__ == "__main__":
-    sp = ImageTools('./images/bms','train10k_result.json')
+    sp = ImageTools('./sal/bms','train10k_result.json')
     sp.convert()
     sp.dumpRslt()
     #sp.showPrediction(226936)
