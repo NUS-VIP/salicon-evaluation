@@ -20,7 +20,7 @@ class AUC():
         self.imgs = self.saliconRes.imgs
 
 
-    def calc_score(self, gtsAnn, resAnn, stepSize=.1, Nsplits=100):
+    def calc_score(self, gtsAnn, resAnn, stepSize=.1, Nsplits=10):
         """
         Computer AUC score. A simple implementation
         :param gtsAnn : list of fixation annotataions
