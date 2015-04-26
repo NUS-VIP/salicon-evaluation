@@ -29,23 +29,14 @@ class CC():
         """
 
         image_id = resAnn[0]['image_id']
-        fixations = [ ann['fixations'] for ann in gtsAnn]
-        merged_fixations = [item for sublist in fixations for item in sublist]
+        fixationmap = self.saliconRes.buildFixMap(gtsAnn)
         salmap = self.saliconRes.decodeImage(resAnn[0]['saliency_map'])
 
         #get size of the original image
         height,width = (self.imgs[image_id]['height'],self.imgs[image_id]['width'])
         mapheight,mapwidth = np.shape(salmap)
-        salmap = scipy.ndimage.zoom(salmap, float(height)/mapheight, float(width)/mapwidth, order=3)
+        salmap = scipy.ndimage.zoom(salmap, (float(height)/mapheight, float(width)/mapwidth), order=3)
         salmap = (salmap - np.mean(salmap))/np.std(salmap)
-
-        # TODO remove the hard code here and read the fixation map from JSON
-        sigma = 19
-        fixationmap = np.zeros((height,width))
-        for x,y in merged_fixations:
-            fixationmap[y][x] = 1
-        fixationmap = np.ndimage.filter.gaussian_filter(fixationmap, sigma)
-        fixationmap = (fixationmap - np.min(fixationmap))/np.std(fixationmap)
 
         return np.corrcoef(salmap.reshape(-1), fixationmap.reshape(-1))[0][1]
 
