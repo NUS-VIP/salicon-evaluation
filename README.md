@@ -1,56 +1,40 @@
-# salicon-evaluation
-evaluation API for salicon : a counterpart of saliency prediction as https://github.com/tylin/coco-caption
+SALICON Saliency Evaluation
+===================
 
-# SALICON Annotation file format:
+Saliency evaluation codes for SALICON dataset.
 
-## 1. Basic structure (same as coco other annotations):
-```
-{
-"info" : info,
-"type" : str,
-"images" : [image],
-"annotations" : [annotation],
-"licenses" : [license],
-}
+## Requirements ##
+- java 1.8.0
+- python 2.7
 
-info {
-"year" : int,
-"version" : str,
-"description" : str,
-"contributor" : str,
-"url" : str,
-"date_created" : datetime,
-}
+## Files ##
+./
+- saliconEvalDemo.py (demo script)
 
-images[{
-"id" : int,
-"width" : int,
-"height" : int,
-"file_name" : str,
-"license" : int,
-"url" : str,
-"date_captured" : datetime,
-}]
+./annotation
+- saliency_val2014.json (SALICON 2014 validation set)
+- Visit SALICON [download]() page for more details.
 
-licenses[{
-"id" : int,
-"name" : str,
-"url" : str,
-}]
-```
-## 2. Saliency Annotations:
-```
-annotations[{
-"id" : int,
-"image_id" : int,
-"worker_id": int,
-"fixations" : [[x0,y0],[x1,y1],...]
-}]
-```
-# SALICON Result file format:
-```
-[{
-"image_id" : int,
-"saliency_map" : [[pointvalue-row1col1,pointvalue-row1col2,...],[pointvalue-row2col1,pointvalue-row2col2,...], ...]
-}]
-```
+./results
+- saliency_val2014_fake_results.json (an example of fake results for running demo)
+- Visit SALICON [format]() page for more details.
+
+./saliconeval: The folder where all evaluation codes are stored.
+- evals.py: The file includes SALICONEval class that can be used to evaluate results on SALICON.
+- auc: AUC evalutation code
+- sauc: Shuffled AUC evaluation code
+- nss: NSS evaluation code
+- cc: CC evaluation code
+
+## References ##
+
+- [SALICON: Saliency in Context](http://www.ece.nus.edu.sg/stfpage/eleqiz/publications/pdf/salicon_cvpr15.pdf)
+- [Microsoft COCO Captions: Data Collection and Evaluation Server](http://arxiv.org/abs/1504.00325)
+- Metrics code (AUC, Shuffled AUC, NSS and CC) are migrated from the [MATLAB code](https://github.com/cvzoya/saliency/) of the [MIT Saliency Benchmark] (http://saliency.mit.edu/) 
+
+## Developers ##
+- Ming Jiang
+- Shane Huang
+
+## Acknowledgement ##
+- [COCO Consortium](http://mscoco.org/people/)
