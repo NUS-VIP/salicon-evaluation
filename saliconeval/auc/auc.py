@@ -20,32 +20,21 @@ class AUC():
         self.imgs = self.saliconRes.imgs
 
 
-    def calc_score(self, gtsAnn, resAnn, stepSize=.1, Nsplits=10):
+    def calc_score(self, gtsAnn, resAnn, stepSize=.1, Nsplits=100):
         """
-        Computer AUC score. A simple implementation
-        :param gtsAnn : list of fixation annotataions
-        :param resAnn : list only contains one element: the result annotation - predicted saliency map
+        Computer AUC score.
+        :param gtsAnn : ground-truth annotations
+        :param resAnn : predicted saliency map
         :return score: int : score
         """
         
-        #result should be only one saliency map
-        image_id = resAnn[0]['image_id']
-        #get ground truth fixations and result saliency map
-        fixations = [ ann['fixations'] for ann in gtsAnn ] # fixations list
-        merged_fixations = [item for sublist in fixations for item in sublist]
-        salmap = self.saliconRes.decodeImage(resAnn[0]['saliency_map'])
+        salMap = (resAnn - np.min(resAnn))/(np.max(resAnn) - np.min(resAnn))
         
-        #get size of the original image
-        height,width = (self.imgs[image_id]['height'],self.imgs[image_id]['width'])
-        mapheight,mapwidth = np.shape(salmap)
-        salmap = scipy.ndimage.zoom(salmap, (float(height)/mapheight, float(width)/mapwidth), order=3)
-        salmap = (salmap - np.min(salmap))/(np.max(salmap) - np.min(salmap))
+        S = salMap.reshape(-1)
+        #F = self.saliconRes.buildFixMap(gtsAnn, False)
+        Sth = np.asarray([ salMap[y-1][x-1] for y,x in gtsAnn ])
         
-        S = salmap.reshape(-1)
-        F = self.saliconRes.buildFixMap(gtsAnn, False)
-        Sth = np.asarray([ salmap[y-1][x-1] for y,x in merged_fixations ])
-        
-        Nfixations = len(merged_fixations)
+        Nfixations = len(gtsAnn)
         Npixels = len(S)
         
         # for each fixation, sample Nsplits values from anywhere on the sal map
@@ -83,9 +72,13 @@ class AUC():
         imgIds = res.keys()
         score = []
         for id in imgIds:
-            salmap = res[id]
+            img = self.imgs[id]
             fixations  = gts[id]
-            score.append(self.calc_score(fixations,salmap))
+            height,width = (img['height'],img['width'])
+            salMap = self.saliconRes.decodeImage(res[id])
+            mapheight,mapwidth = np.shape(salMap)
+            salmap = scipy.ndimage.zoom(salMap, (float(height)/mapheight, float(width)/mapwidth), order=3)
+            score.append(self.calc_score(fixations,salMap))
         average_score = np.mean(np.array(score))
         return average_score, np.array(score)
 

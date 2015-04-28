@@ -19,26 +19,18 @@ class CC():
         self.saliconRes = saliconRes
         self.imgs = self.saliconRes.imgs
 
-
     def calc_score(self, gtsAnn, resAnn):
         """
         Computer CC score. A simple implementation
-        :param gtsAnn : list of fixation annotataions
-        :param resAnn : list only contains one element: the result annotation - predicted saliency map
+        :param gtsAnn : ground-truth fixation map
+        :param resAnn : predicted saliency map
         :return score: int : score
         """
 
-        image_id = resAnn[0]['image_id']
-        fixationmap = self.saliconRes.buildFixMap(gtsAnn)
-        salmap = self.saliconRes.decodeImage(resAnn[0]['saliency_map'])
+        fixationMap = (gtsAnn - np.mean(gtsAnn))/np.std(gtsAnn)
+        salMap = (resAnn - np.mean(resAnn))/np.std(resAnn)
 
-        #get size of the original image
-        height,width = (self.imgs[image_id]['height'],self.imgs[image_id]['width'])
-        mapheight,mapwidth = np.shape(salmap)
-        salmap = scipy.ndimage.zoom(salmap, (float(height)/mapheight, float(width)/mapwidth), order=3)
-        salmap = (salmap - np.mean(salmap))/np.std(salmap)
-
-        return np.corrcoef(salmap.reshape(-1), fixationmap.reshape(-1))[0][1]
+        return np.corrcoef(salMap.reshape(-1), fixationMap.reshape(-1))[0][1]
 
     def compute_score(self, gts, res):
         """
@@ -47,13 +39,22 @@ class CC():
         :param res : dict : salmap predictions with "image name" key and ndarray as values
         :returns: average_score: float (mean CC score computed by averaging scores for all the images)
         """
+
         assert(gts.keys() == res.keys())
         imgIds = res.keys()
         score = []
         for id in imgIds:
-            salmap = res[id]
+            img = self.imgs[id]
             fixations  = gts[id]
-            score.append(self.calc_score(fixations,salmap))
+            gtsAnn = {}
+            gtsAnn['image_id'] = id
+            gtsAnn['fixations'] = fixations
+            fixationmap = self.saliconRes.buildFixMap([gtsAnn])
+            height,width = (img['height'],img['width'])
+            salMap = self.saliconRes.decodeImage(res[id])
+            mapheight,mapwidth = np.shape(salMap)
+            salMap = scipy.ndimage.zoom(salMap, (float(height)/mapheight, float(width)/mapwidth), order=3)
+            score.append(self.calc_score(fixationmap,salMap))
         average_score = np.mean(np.array(score))
         return average_score, np.array(score)
 
