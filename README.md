@@ -9,7 +9,7 @@ Saliency evaluation codes for SALICON dataset.
 ## Files ##
 ./
 - saliconEvalDemo.py (demo script)
-- image2json.py (converts output folder to result json)
+- image2json.py (converts a folder of saliency maps to result JSON)
 
 ./annotation
 - fixations_val2014.json (SALICON 2014 validation set)
