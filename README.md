@@ -9,13 +9,14 @@ Saliency evaluation codes for SALICON dataset.
 ## Files ##
 ./
 - saliconEvalDemo.py (demo script)
+- image2json.py (converts output folder to result json)
 
 ./annotation
-- saliency_val2014.json (SALICON 2014 validation set)
+- fixations_val2014.json (SALICON 2014 validation set)
 - Visit SALICON [download]() page for more details.
 
 ./results
-- saliency_val2014_fake_results.json (an example of fake results for running demo)
+- fixations_val2014_fake_results.json (an example of fake results for running demo)
 - Visit SALICON [format]() page for more details.
 
 ./saliconeval: The folder where all evaluation codes are stored.
