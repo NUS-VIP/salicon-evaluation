@@ -4,7 +4,6 @@ SALICON Saliency Evaluation
 Saliency evaluation codes for SALICON dataset.
 
 ## Requirements ##
-- java 1.8.0
 - python 2.7
 
 ## Files ##
