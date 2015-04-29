@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[6]:
+# In[9]:
 
 #get_ipython().magic(u'reload_ext autoreload')
 #get_ipython().magic(u'autoreload 2')
@@ -14,31 +14,31 @@ import pylab
 pylab.rcParams['figure.figsize'] = (10.0, 8.0)
 
 
-# In[2]:
+# In[10]:
 
 import json
 from json import encoder
 encoder.FLOAT_REPR = lambda o: format(o, '.3f')
 
 
-# In[3]:
+# In[11]:
 
 dataDir='.'
-dataType='val2014'
+dataType='train2014examples'
 algName = 'fake'
-annFile='%s/annotations/fixations_%s_examples.json'%(dataDir,dataType)
+annFile='%s/annotations/fixations_%s.json'%(dataDir,dataType)
 subtypes=['results', 'evalImgs', 'eval']
-[resFile, evalImgsFile, evalFile]= ['%s/results/salmaps_%s_%s_%s.json'%(dataDir,dataType,algName,subtype) for subtype in subtypes]
+[resFile, evalImgsFile, evalFile]= ['%s/results/fixations_%s_%s_%s.json'%(dataDir,dataType,algName,subtype) for subtype in subtypes]
 
 
-# In[4]:
+# In[12]:
 
 # create coco object and cocoRes object
 salicon = SALICON(annFile)
 saliconRes = salicon.loadRes(resFile)
 
 
-# In[17]:
+# In[13]:
 
 # create cocoEval object by taking coco and cocoRes
 saliconEval = SALICONEval(salicon, saliconRes)
@@ -55,6 +55,24 @@ saliconEval.evaluate()
 print "Final Result for each Metric:"
 for metric, score in saliconEval.eval.items():
     print '%s: %.3f'%(metric, score)
+
+
+# In[6]:
+
+# plot score histogram
+saucScores = [eva['SAUC'] for eva in saliconEval.evalImgs]
+plt.hist(saucScores)
+plt.title('Histogram of SAUC Scores', fontsize=20)
+plt.xlabel('SAUC score', fontsize=20)
+plt.ylabel('result counts', fontsize=20)
+plt.show()
+
+
+# In[14]:
+
+# save evaluation results to ./results folder
+json.dump(saliconEval.evalImgs, open(evalImgsFile, 'w'))
+json.dump(saliconEval.eval,     open(evalFile, 'w'))
 
 
 # In[ ]:
