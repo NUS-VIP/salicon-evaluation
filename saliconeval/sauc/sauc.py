@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-# 
+#
 # File Name : nss.py
 #
 # Description : Computes NSS metric #
 
-# Author : Ming Jiang 
+# Author : Ming Jiang
 
 import numpy as np
 import scipy.ndimage
@@ -29,13 +29,13 @@ class SAUC():
         """
 
         salMap = (resAnn - np.min(resAnn))/(np.max(resAnn) - np.min(resAnn))
-        
+
         S = salMap.reshape(-1)
         Sth = np.asarray([ salMap[y-1][x-1] for y,x in gtsAnn ])
-        
+
         Nfixations = len(gtsAnn)
         Npixels = len(S)
-        
+
         # for each fixation, sample Nsplits values from anywhere on the sal map
         r = np.random.randint(Npixels, size=(Nfixations,Nsplits))
 
@@ -45,14 +45,14 @@ class SAUC():
 
         ind = np.nonzero(others) # find fixation locations on other images
         Nothers = len(ind[0])
-        
+
         # randomize choice of fixation locations
         randfix = [[salMap[ind[0][k]][ind[1][k]] for k in np.random.choice(Nothers, Nfixations, replace=False)]\
                    for i in range(Nsplits)]
-        
+
         # calculate AUC per random split (set of random locations)
         auc = np.full(Nsplits, np.nan)
-        
+
         for s in range(Nsplits):
             curfix = randfix[s]
             allthreshes = np.arange(0,np.max(np.concatenate((Sth, curfix), axis=0)),stepSize)
@@ -79,7 +79,7 @@ class SAUC():
         imgIds = res.keys()
         score = []
         all_fixations = []
-                      
+
         # we assume all image sizes are 640x480
         for id in imgIds:
             fixations  = gts[id]
@@ -87,9 +87,9 @@ class SAUC():
             gtsAnn['image_id'] = id
             gtsAnn['fixations'] = fixations
             shufMap += self.saliconRes.buildFixMap([gtsAnn], False)
-        
+
         shufMap = shufMap>0
-        
+
         assert(gts.keys() == res.keys())
         imgIds = res.keys()
         score = []
@@ -107,8 +107,8 @@ class SAUC():
     def method(self):
         return "SAUC"
 
-   
 
-if __name__=="__main__": 
+
+if __name__=="__main__":
     nss = SAUC()
     #more tests here
