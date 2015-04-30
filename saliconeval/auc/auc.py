@@ -20,7 +20,7 @@ class AUC():
         self.imgs = self.saliconRes.imgs
 
 
-    def calc_score(self, gtsAnn, resAnn, stepSize=.1, Nsplits=100):
+    def calc_score(self, gtsAnn, resAnn, stepSize=.01, Nrand=100000):
         """
         Computer AUC score.
         :param gtsAnn : ground-truth annotations
@@ -31,35 +31,25 @@ class AUC():
         salMap = (resAnn - np.min(resAnn))/(np.max(resAnn) - np.min(resAnn))
 
         S = salMap.reshape(-1)
-        #F = self.saliconRes.buildFixMap(gtsAnn, False)
         Sth = np.asarray([ salMap[y-1][x-1] for y,x in gtsAnn ])
 
         Nfixations = len(gtsAnn)
         Npixels = len(S)
 
-        # for each fixation, sample Nsplits values from anywhere on the sal map
-        r = np.random.randint(Npixels, size=(Nfixations,Nsplits))
-
         # sal map values at random locations
-        randfix = [S[x] for x in np.nditer(r, flags=['external_loop'], order='F')]
+        randfix = S[np.random.randint(Npixels, size=Nrand)]
 
-        # calculate AUC per random split (set of random locations)
-        auc = np.full(Nsplits, np.nan)
+        allthreshes = np.arange(0,np.max(np.concatenate((Sth, randfix), axis=0)),stepSize)
+        allthreshes = allthreshes[::-1]
+        tp = np.zeros(len(allthreshes)+2)
+        fp = np.zeros(len(allthreshes)+2)
+        tp[-1]=1.0
+        fp[-1]=1.0
+        tp[1:-1]=[float(np.sum(Sth >= thresh))/Nfixations for thresh in allthreshes]
+        fp[1:-1]=[float(np.sum(randfix >= thresh))/Nrand for thresh in allthreshes]
 
-        for s in range(Nsplits):
-            curfix = randfix[s]
-            allthreshes = np.arange(0,np.max(np.concatenate((Sth, curfix), axis=0)),stepSize)
-            allthreshes = allthreshes[::-1]
-            tp = np.zeros(len(allthreshes)+2)
-            fp = np.zeros(len(allthreshes)+2)
-            tp[-1]=1.0
-            fp[-1]=1.0
-            tp[1:-1]=[float(np.sum(Sth >= thresh))/Nfixations for thresh in allthreshes]
-            fp[1:-1]=[float(np.sum(curfix >= thresh))/Nfixations for thresh in allthreshes]
-
-            auc[s] = np.trapz(tp,fp)
-
-        return np.mean(auc)
+        auc = np.trapz(tp,fp)
+        return auc
 
     def compute_score(self, gts, res):
         """

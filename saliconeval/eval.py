@@ -2,12 +2,10 @@ __author__ = 'shane-huang'
 __version__ = '1.0'
 
 from nss.nss import NSS
-from kl.kl import KL
 from sauc.sauc import SAUC
 from auc.auc import AUC
 from cc.cc import CC
 import numpy as np
-
 class SALICONEval:
     def __init__(self, salicon, saliconRes):
         self.evalImgs = []
@@ -16,7 +14,7 @@ class SALICONEval:
         self.salicon = salicon
         self.saliconRes = saliconRes
         self.params = {'image_id': salicon.getImgIds()}
-        
+
     def evaluate(self):
         imgIds = self.params['image_id']
 
@@ -26,13 +24,12 @@ class SALICONEval:
         print 'setting up scorers...'
         ## set up the scorers,
         scorers = [
+            (SAUC(self.saliconRes),"SAUC"),
+            (AUC(self.saliconRes),"AUC"),
             (NSS(self.saliconRes), "NSS"),
             (CC(self.saliconRes),"CC"),
-            (AUC(self.saliconRes),"AUC"),
-            (SAUC(self.saliconRes),"SAUC")
-            #(KL(self.saliconRes),"KL")
         ]
-        
+
         ## add any initialization here
         fixations = {}
         salmaps = {}
@@ -44,11 +41,10 @@ class SALICONEval:
             fixs = np.asarray(fixs)
             dup_ind = np.all(fixs[1:]==fixs[:-1], axis=1)
             fixations[imgId] = fixs[dup_ind].tolist()
-        
+
         # =================================================
         # Compute scores
         # =================================================
-        eval = {}
         for scorer, method in scorers:
             print 'computing %s score...'%(scorer.method())
             score, scores = scorer.compute_score(fixations, salmaps)
