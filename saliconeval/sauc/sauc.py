@@ -9,7 +9,6 @@
 import numpy as np
 import scipy.ndimage
 
-
 class SAUC():
     '''
     Class for computing NSS score for a set of candidate sentences for the MS COCO test set
@@ -36,19 +35,16 @@ class SAUC():
         Nfixations = len(gtsAnn)
         Npixels = len(S)
 
-        # for each fixation, sample Nsplits values from anywhere on the sal map
-        r = np.random.randint(Npixels, size=(Nfixations,Nsplits))
-
         others = np.copy(shufMap)
         for y,x in gtsAnn:
             others[y-1][x-1] = 0
 
         ind = np.nonzero(others) # find fixation locations on other images
-        Nothers = len(ind[0])
+        F = salMap[ind]
+        Nothers = len(F)
 
         # randomize choice of fixation locations
-        randfix = [[salMap[ind[0][k]][ind[1][k]] for k in np.random.choice(Nothers, Nfixations, replace=False)]\
-                   for i in range(Nsplits)]
+        randfix = [F[np.random.choice(Nothers, Nfixations, replace=False)] for i in range(Nsplits)]
 
         # calculate AUC per random split (set of random locations)
         auc = np.full(Nsplits, np.nan)
@@ -87,7 +83,6 @@ class SAUC():
             gtsAnn['image_id'] = id
             gtsAnn['fixations'] = fixations
             shufMap += self.saliconRes.buildFixMap([gtsAnn], False)
-
         shufMap = shufMap>0
 
         assert(gts.keys() == res.keys())
