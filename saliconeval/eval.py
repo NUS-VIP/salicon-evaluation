@@ -15,7 +15,7 @@ class SALICONEval:
         self.saliconRes = saliconRes
         self.params = {'image_id': salicon.getImgIds()}
 
-    def evaluate(self):
+    def evaluate(self, filterAnns = True):
         imgIds = self.params['image_id']
 
         # =================================================
@@ -37,10 +37,13 @@ class SALICONEval:
             salmaps[imgId] = self.saliconRes.imgToAnns[imgId][0]['saliency_map']
             fixs = [ann['fixations'] for ann in self.salicon.imgToAnns[imgId]]
             fixs = [item for sublist in fixs for item in sublist]
-            fixs.sort()
-            fixs = np.asarray(fixs)
-            dup_ind = np.all(fixs[1:]==fixs[:-1], axis=1)
-            fixations[imgId] = fixs[dup_ind].tolist()
+            if filterAnns:
+                fixs.sort()
+                fixs = np.asarray(fixs)
+                dup_ind = np.all(fixs[1:]==fixs[:-1], axis=1)
+                fixations[imgId] = fixs[dup_ind].tolist()
+            else:
+                fixations[imgId] = fixs
 
         # =================================================
         # Compute scores
