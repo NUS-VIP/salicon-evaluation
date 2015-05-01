@@ -61,7 +61,7 @@ class ImageTools:
         print len(self.result.keys()),'images converted','in %0.2fs'%((datetime.datetime.utcnow() - time_t).total_seconds())
         
       
-    def dumpRslt(self):
+    def dumpRes(self):
         time_t = datetime.datetime.utcnow()
         #anns = [{u'image_id':image_id,'saliency_map':res.tolist()} for image_id,res in self.result.items()]
         anns = self.result.values()
@@ -84,7 +84,7 @@ class ImageTools:
 if __name__ == "__main__":
     sp = ImageTools('./bms','train-examples_result.json')
     sp.convert()
-    sp.dumpRslt()
+    sp.dumpRes()
     #sp.showPrediction(226936)
 
 
