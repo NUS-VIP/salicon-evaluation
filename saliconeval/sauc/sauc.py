@@ -35,8 +35,9 @@ class SAUC():
             others[y-1][x-1] = 0
 
         ind = np.nonzero(others) # find fixation locations on other images
+        nFix = shufMap[ind]
         randfix = salMap[ind]
-        Nothers = len(randfix)
+        Nothers = sum(nFix)
 
         allthreshes = np.arange(0,np.max(np.concatenate((Sth, randfix), axis=0)),stepSize)
         allthreshes = allthreshes[::-1]
@@ -45,7 +46,7 @@ class SAUC():
         tp[-1]=1.0
         fp[-1]=1.0
         tp[1:-1]=[float(np.sum(Sth >= thresh))/Nfixations for thresh in allthreshes]
-        fp[1:-1]=[float(np.sum(randfix >= thresh))/Nothers for thresh in allthreshes]
+        fp[1:-1]=[float(np.sum(nFix[randfix >= thresh]))/Nothers for thresh in allthreshes]
 
         auc = np.trapz(tp,fp)
         return auc
@@ -68,7 +69,6 @@ class SAUC():
             gtsAnn['image_id'] = id
             gtsAnn['fixations'] = fixations
             shufMap += self.saliconRes.buildFixMap([gtsAnn], False)
-        shufMap = shufMap>0
 
         assert(gts.keys() == res.keys())
         imgIds = res.keys()
