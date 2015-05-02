@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
-# File Name : nss.py
+# File Name : sauc.py
 #
-# Description : Computes NSS metric #
+# Description : Computes shuffled AUC metric #
 
 # Author : Ming Jiang
 
@@ -10,8 +10,7 @@ import numpy as np
 import scipy.ndimage
 class SAUC():
     '''
-    Class for computing NSS score for a set of candidate sentences for the MS COCO test set
-
+    Class for computing SAUC score for saliency maps
     '''
     def __init__(self,saliconRes):
         self.saliconRes = saliconRes

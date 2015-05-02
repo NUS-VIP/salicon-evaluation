@@ -12,7 +12,7 @@ import scipy.ndimage
 
 class NSS():
     '''
-    Class for computing NSS score for a set of candidate sentences for the MS COCO test set
+    Class for computing NSS score for saliency maps
 
     '''
     def __init__(self,saliconRes):
@@ -27,7 +27,7 @@ class NSS():
         :param resAnn : predicted saliency map
         :return score: int : NSS score
         """
-   
+
         salMap = (resAnn - np.mean(resAnn))/np.std(resAnn)
         return np.mean([ salMap[y-1][x-1] for y,x in gtsAnn ])
 

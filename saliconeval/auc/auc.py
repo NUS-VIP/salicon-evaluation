@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #
-# File Name : nss.py
+# File Name : auc.py
 #
-# Description : Computes NSS metric #
+# Description : Computes AUC metric
 
 # Author : Ming Jiang
 
@@ -12,7 +12,7 @@ import scipy.ndimage
 
 class AUC():
     '''
-    Class for computing NSS score for a set of candidate sentences for the MS COCO test set
+    Class for computing NSS score for saliency maps
 
     '''
     def __init__(self,saliconRes):
