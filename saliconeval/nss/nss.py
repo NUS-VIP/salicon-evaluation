@@ -28,7 +28,9 @@ class NSS():
         :return score: int : NSS score
         """
 
-        salMap = (resAnn - np.mean(resAnn))/np.std(resAnn)
+        salMap = resAnn - np.mean(resAnn)
+        if np.max(salMap) > 0:
+            salMap = salMap / np.std(salMap)
         return np.mean([ salMap[y-1][x-1] for y,x in gtsAnn ])
 
     def compute_score(self, gts, res):

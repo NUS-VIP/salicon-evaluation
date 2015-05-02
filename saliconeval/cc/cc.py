@@ -26,8 +26,12 @@ class CC():
         :return score: int : score
         """
 
-        fixationMap = (gtsAnn - np.mean(gtsAnn))/np.std(gtsAnn)
-        salMap = (resAnn - np.mean(resAnn))/np.std(resAnn)
+        fixationMap = gtsAnn - np.mean(gtsAnn)
+        if np.max(fixationMap) > 0:
+            fixationMap = fixationMap / np.std(fixationMap)
+        salMap = resAnn - np.mean(resAnn)
+        if np.max(salMap) > 0:
+            salMap = salMap / np.std(salMap)
 
         return np.corrcoef(salMap.reshape(-1), fixationMap.reshape(-1))[0][1]
 

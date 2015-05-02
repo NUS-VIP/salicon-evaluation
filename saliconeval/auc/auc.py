@@ -28,7 +28,9 @@ class AUC():
         :return score: int : score
         """
 
-        salMap = (resAnn - np.min(resAnn))/(np.max(resAnn) - np.min(resAnn))
+        salMap = resAnn - np.min(resAnn)
+        if np.max(salMap) > 0:
+            salMap = salMap / np.max(salMap)
 
         S = salMap.reshape(-1)
         Sth = np.asarray([ salMap[y-1][x-1] for y,x in gtsAnn ])
